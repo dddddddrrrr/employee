@@ -14,18 +14,6 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
-
 // Necessary for Next auth
 model Account {
     id                       String  @id @default(cuid())
@@ -51,18 +39,22 @@ model Session {
     sessionToken String   @unique
     userId       String
     expires      DateTime
-    user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+    EMPLOYEE
+    BOSS
 }
 
 model User {
-    id            String    @id @default(cuid())
+    id            String     @id @default(cuid())
     name          String?
-    email         String?   @unique
+    email         String?    @unique
     emailVerified DateTime?
     image         String?
     accounts      Account[]
-    sessions      Session[]
-    posts         Post[]
+    employees     Employee[]
+    role          Role       @default(EMPLOYEE)
 }
 
 model VerificationToken {
@@ -71,4 +63,37 @@ model VerificationToken {
     expires    DateTime
 
     @@unique([identifier, token])
+}
+
+model Employee {
+    id          String    @id @default(cuid())
+    user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+    userId      String    @unique
+    firstName   String
+    lastName    String
+    gender      Gender
+    dateOfBirth DateTime?
+    position    String
+    department  String
+    dateOfHire  DateTime
+    salary      Float
+    bonus       Float?    @default(0)
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime  @updatedAt
+    company     Company   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+    companyId   String
+}
+
+model Company {
+    id        String     @id @default(cuid())
+    name      String
+    employees Employee[]
+    createdAt DateTime   @default(now())
+    updatedAt DateTime   @updatedAt
+}
+
+enum Gender {
+    MALE
+    FEMALE
+    OTHER
 }
